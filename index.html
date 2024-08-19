@@ -25,6 +25,7 @@
             font-size: 24px;
             font-weight: bold;
             color: #333;
+            cursor: pointer;
         }
         .pinyin {
             font-size: 18px;
@@ -67,6 +68,11 @@
                 <div class="pinyin">${word.pinyin}</div>
                 <div class="meaning">${word.meaning}</div>
             `;
+            wordDiv.querySelector('.chinese').addEventListener('click', () => {
+                const utterance = new SpeechSynthesisUtterance(word.chinese);
+                utterance.lang = 'zh-CN';  // Thiết lập ngôn ngữ phát âm là tiếng Trung Quốc
+                window.speechSynthesis.speak(utterance);
+            });
             wordsList.appendChild(wordDiv);
         });
     </script>
