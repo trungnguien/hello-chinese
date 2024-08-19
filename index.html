@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn 10 Chinese Words</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .word-container {
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        .chinese {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .pinyin {
+            font-size: 18px;
+            color: #666;
+        }
+        .meaning {
+            font-size: 16px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <h1>Today's Chinese Words</h1>
+    <div id="words-list"></div>
+
+    <script>
+        const words = [
+            { chinese: '你好', pinyin: 'nǐ hǎo', meaning: 'Xin chào' },
+            { chinese: '谢谢', pinyin: 'xièxiè', meaning: 'Cảm ơn' },
+            { chinese: '对不起', pinyin: 'duìbuqǐ', meaning: 'Xin lỗi' },
+            { chinese: '再见', pinyin: 'zàijiàn', meaning: 'Tạm biệt' },
+            { chinese: '请', pinyin: 'qǐng', meaning: 'Xin mời' },
+            { chinese: '早上好', pinyin: 'zǎoshang hǎo', meaning: 'Chào buổi sáng' },
+            { chinese: '晚上好', pinyin: 'wǎnshang hǎo', meaning: 'Chào buổi tối' },
+            { chinese: '好', pinyin: 'hǎo', meaning: 'Tốt' },
+            { chinese: '不', pinyin: 'bù', meaning: 'Không' },
+            { chinese: '是', pinyin: 'shì', meaning: 'Là' },
+            // Thêm từ vựng ở đây
+        ];
+
+        // Chọn 10 từ ngẫu nhiên mỗi ngày
+        const randomWords = words.sort(() => 0.5 - Math.random()).slice(0, 10);
+
+        const wordsList = document.getElementById('words-list');
+        randomWords.forEach(word => {
+            const wordDiv = document.createElement('div');
+            wordDiv.className = 'word-container';
+            wordDiv.innerHTML = `
+                <div class="chinese">${word.chinese}</div>
+                <div class="pinyin">${word.pinyin}</div>
+                <div class="meaning">${word.meaning}</div>
+            `;
+            wordsList.appendChild(wordDiv);
+        });
+    </script>
+</body>
+</html>
