@@ -42,39 +42,46 @@
     <div id="words-list"></div>
 
     <script>
-        const words = [
-            { chinese: '你好', pinyin: 'nǐ hǎo', meaning: 'Xin chào' },
-            { chinese: '谢谢', pinyin: 'xièxiè', meaning: 'Cảm ơn' },
-            { chinese: '对不起', pinyin: 'duìbuqǐ', meaning: 'Xin lỗi' },
-            { chinese: '再见', pinyin: 'zàijiàn', meaning: 'Tạm biệt' },
-            { chinese: '请', pinyin: 'qǐng', meaning: 'Xin mời' },
-            { chinese: '早上好', pinyin: 'zǎoshang hǎo', meaning: 'Chào buổi sáng' },
-            { chinese: '晚上好', pinyin: 'wǎnshang hǎo', meaning: 'Chào buổi tối' },
-            { chinese: '好', pinyin: 'hǎo', meaning: 'Tốt' },
-            { chinese: '不', pinyin: 'bù', meaning: 'Không' },
-            { chinese: '是', pinyin: 'shì', meaning: 'Là' },
-            // Thêm từ vựng ở đây
-        ];
-
-        // Chọn 10 từ ngẫu nhiên mỗi ngày
-        const randomWords = words.sort(() => 0.5 - Math.random()).slice(0, 10);
-
+        const apiUrl = "https://api.mdbg.net/api/v2/words"; // URL API giả lập
         const wordsList = document.getElementById('words-list');
-        randomWords.forEach(word => {
-            const wordDiv = document.createElement('div');
-            wordDiv.className = 'word-container';
-            wordDiv.innerHTML = `
-                <div class="chinese">${word.chinese}</div>
-                <div class="pinyin">${word.pinyin}</div>
-                <div class="meaning">${word.meaning}</div>
-            `;
-            wordDiv.querySelector('.chinese').addEventListener('click', () => {
-                const utterance = new SpeechSynthesisUtterance(word.chinese);
-                utterance.lang = 'zh-CN';  // Thiết lập ngôn ngữ phát âm là tiếng Trung Quốc
-                window.speechSynthesis.speak(utterance);
+
+        // Lưu trữ ngày và từ đã học
+        const today = new Date().toISOString().split('T')[0];
+        let learnedWords = JSON.parse(localStorage.getItem('learnedWords')) || {};
+        
+        if (learnedWords[today]) {
+            displayWords(learnedWords[today]);
+        } else {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const words = data.words; // Giả sử API trả về danh sách từ
+                    const newWords = words.slice(0, 10); // Chọn 10 từ đầu tiên
+                    learnedWords[today] = newWords;
+                    localStorage.setItem('learnedWords', JSON.stringify(learnedWords));
+                    displayWords(newWords);
+                })
+                .catch(error => console.error('Error fetching words:', error));
+        }
+
+        function displayWords(words) {
+            wordsList.innerHTML = '';
+            words.forEach(word => {
+                const wordDiv = document.createElement('div');
+                wordDiv.className = 'word-container';
+                wordDiv.innerHTML = `
+                    <div class="chinese">${word.chinese}</div>
+                    <div class="pinyin">${word.pinyin}</div>
+                    <div class="meaning">${word.meaning}</div>
+                `;
+                wordDiv.querySelector('.chinese').addEventListener('click', () => {
+                    const utterance = new SpeechSynthesisUtterance(word.chinese);
+                    utterance.lang = 'zh-CN';  // Thiết lập ngôn ngữ phát âm là tiếng Trung Quốc
+                    window.speechSynthesis.speak(utterance);
+                });
+                wordsList.appendChild(wordDiv);
             });
-            wordsList.appendChild(wordDiv);
-        });
+        }
     </script>
 </body>
 </html>
