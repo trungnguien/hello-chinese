@@ -42,7 +42,7 @@
     <div id="words-list"></div>
 
     <script>
-        const apiUrl = "https://api.mdbg.net/api/v2/words"; // URL API giả lập
+        const apiUrl = "https://api.mdbg.net/api/v2/words";
         const wordsList = document.getElementById('words-list');
 
         // Lưu trữ ngày và từ đã học
@@ -52,10 +52,10 @@
         if (learnedWords[today]) {
             displayWords(learnedWords[today]);
         } else {
-            fetch(apiUrl)
+            fetch(`${apiUrl}?q=你好`) // Thay đổi '你好' thành từ ngẫu nhiên để lấy dữ liệu
                 .then(response => response.json())
                 .then(data => {
-                    const words = data.words; // Giả sử API trả về danh sách từ
+                    const words = data.words;
                     const newWords = words.slice(0, 10); // Chọn 10 từ đầu tiên
                     learnedWords[today] = newWords;
                     localStorage.setItem('learnedWords', JSON.stringify(learnedWords));
@@ -70,12 +70,12 @@
                 const wordDiv = document.createElement('div');
                 wordDiv.className = 'word-container';
                 wordDiv.innerHTML = `
-                    <div class="chinese">${word.chinese}</div>
+                    <div class="chinese">${word.character}</div>
                     <div class="pinyin">${word.pinyin}</div>
                     <div class="meaning">${word.meaning}</div>
                 `;
                 wordDiv.querySelector('.chinese').addEventListener('click', () => {
-                    const utterance = new SpeechSynthesisUtterance(word.chinese);
+                    const utterance = new SpeechSynthesisUtterance(word.character);
                     utterance.lang = 'zh-CN';  // Thiết lập ngôn ngữ phát âm là tiếng Trung Quốc
                     window.speechSynthesis.speak(utterance);
                 });
