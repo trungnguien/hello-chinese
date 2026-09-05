@@ -1,0 +1,150 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1a1611;
+  font-family: "Segoe UI", Arial, sans-serif;
+  user-select: none;
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+#player-panel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 220px;
+  background: rgba(20, 15, 10, 0.75);
+  border: 1px solid #8a6d3b;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #f1e6c8;
+  pointer-events: auto;
+}
+#player-name { font-weight: bold; margin-bottom: 4px; color: #ffe08a; text-shadow: 0 0 4px #000; }
+.bar { position: relative; height: 14px; border-radius: 3px; background: #2a2018; margin-top: 3px; overflow: hidden; border: 1px solid #000; }
+.bar .fill { height: 100%; width: 100%; transform-origin: left; transition: width 0.15s linear; }
+.bar.hp .fill { background: linear-gradient(#e34, #a00); }
+.bar.mp .fill { background: linear-gradient(#48f, #05a); }
+.bar.exp .fill { background: linear-gradient(#fd4, #b90); }
+.bar span { position: absolute; inset: 0; text-align: center; font-size: 10px; line-height: 14px; color: #fff; text-shadow: 0 0 2px #000; }
+#stat-line { margin-top: 6px; font-size: 12px; color: #cbb896; }
+
+#minimap {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 160px;
+  height: 160px;
+  background: rgba(10, 8, 5, 0.7);
+  border: 1px solid #8a6d3b;
+  border-radius: 6px;
+}
+
+#chat {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  width: 360px;
+  pointer-events: auto;
+}
+#chat-log {
+  height: 130px;
+  overflow-y: auto;
+  background: rgba(10, 8, 5, 0.6);
+  border: 1px solid #6a5230;
+  border-radius: 6px 6px 0 0;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #e7dcc0;
+}
+#chat-log div { margin-bottom: 2px; }
+#chat-form input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #6a5230;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-size: 12px;
+}
+
+#help {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  max-width: 320px;
+  background: rgba(10, 8, 5, 0.6);
+  border: 1px solid #6a5230;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  color: #cbb896;
+  text-align: right;
+}
+
+#shop-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  background: #241b12;
+  border: 2px solid #a4834c;
+  border-radius: 8px;
+  padding: 12px;
+  color: #f1e6c8;
+  pointer-events: auto;
+}
+#shop-title { font-weight: bold; font-size: 16px; margin-bottom: 8px; text-align: center; color: #ffe08a; }
+.shop-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 4px;
+  border-bottom: 1px solid #4a3a22;
+  font-size: 13px;
+}
+.shop-item button {
+  background: #7a5a2a;
+  border: 1px solid #c9a05c;
+  color: #fff;
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+#shop-close {
+  margin-top: 10px;
+  width: 100%;
+  padding: 6px;
+  background: #5a3d1e;
+  border: 1px solid #c9a05c;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.hidden { display: none !important; }
+
+.floating-text {
+  position: absolute;
+  pointer-events: none;
+  font-weight: bold;
+  font-size: 13px;
+  text-shadow: 0 0 3px #000, 0 0 3px #000;
+}

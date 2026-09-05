@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vo Lam Truyen Ky Online - Fan Demo</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div id="player-panel">
+      <div id="player-name">-</div>
+      <div class="bar hp"><div id="hp-fill" class="fill"></div><span id="hp-text"></span></div>
+      <div class="bar mp"><div id="mp-fill" class="fill"></div><span id="mp-text"></span></div>
+      <div class="bar exp"><div id="exp-fill" class="fill"></div><span id="exp-text"></span></div>
+      <div id="stat-line">Cap <span id="stat-level">1</span> · <span id="stat-gold">0</span> lượng</div>
+    </div>
+
+    <canvas id="minimap"></canvas>
+
+    <div id="shop-panel" class="hidden">
+      <div id="shop-title">Cửa hàng</div>
+      <div id="shop-items"></div>
+      <button id="shop-close">Đóng</button>
+    </div>
+
+    <div id="chat">
+      <div id="chat-log"></div>
+      <form id="chat-form">
+        <input id="chat-input" autocomplete="off" placeholder="Nhấn Enter để chat...">
+      </form>
+    </div>
+
+    <div id="help">
+      WASD / phím mũi tên: di chuyển &nbsp;|&nbsp; M: lên/xuống ngựa &nbsp;|&nbsp;
+      Click quái: tấn công &nbsp;|&nbsp; E gần NPC bán hàng: mở shop &nbsp;|&nbsp; Enter: chat
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
