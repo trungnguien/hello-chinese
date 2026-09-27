@@ -1,0 +1,66 @@
+/* Giao diện riêng của module Cờ vua — nạp động khi vào phòng cờ vua. */
+:root {
+  --light-square: #eeddbb;
+  --dark-square: #b58863;
+  --last-move: rgba(205, 210, 60, 0.55);
+  --selected: rgba(20, 85, 30, 0.5);
+  --target: rgba(20, 85, 30, 0.35);
+  --check: radial-gradient(circle, rgba(255, 0, 0, 0.9) 0%, rgba(231, 0, 0, 0.6) 30%, rgba(169, 0, 0, 0) 75%);
+}
+
+.board {
+  --size: var(--stage-size, min(92vw, 78vh, 640px));
+  position: relative;
+  width: var(--size); height: var(--size);
+  display: grid;
+  grid-template-columns: repeat(var(--files, 8), 1fr);
+  grid-template-rows: repeat(var(--ranks, 8), 1fr);
+  border-radius: 6px; overflow: hidden; box-shadow: var(--shadow);
+  user-select: none; touch-action: none;
+}
+.square { position: relative; display: flex; align-items: center; justify-content: center; }
+.square.light { background: var(--light-square); }
+.square.dark { background: var(--dark-square); }
+.square.last::before, .square.selected::before, .square.check::before { content: ''; position: absolute; inset: 0; }
+.square.last::before { background: var(--last-move); }
+.square.selected::before { background: var(--selected); }
+.square.check::before { background: var(--check); }
+.square.movable { cursor: grab; }
+.square.target { cursor: pointer; }
+.square.target::after {
+  content: ''; position: absolute; width: 30%; height: 30%; border-radius: 50%; background: var(--target);
+}
+.square.target.capture::after {
+  width: 100%; height: 100%; background: radial-gradient(transparent 0 62%, var(--target) 63%);
+}
+.square.target:hover::after { width: 100%; height: 100%; border-radius: 0; background: var(--target); }
+.coord { position: absolute; font-size: calc(var(--size) / 60); font-weight: 700; opacity: 0.8; pointer-events: none; }
+.coord.rank { top: 3px; left: 4px; }
+.coord.file { bottom: 2px; right: 4px; }
+.square.light .coord { color: var(--dark-square); }
+.square.dark .coord { color: var(--light-square); }
+
+.piece {
+  position: relative; z-index: 1;
+  font-size: calc(var(--size, 480px) / 8 * 0.78); line-height: 1;
+  pointer-events: none;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols 2', 'DejaVu Sans', serif;
+}
+.piece.w { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 0 1px #000, 0 2px 3px rgba(0, 0, 0, 0.45); }
+.piece.b { color: #1d1b19; text-shadow: 0 0 1px #fff4, 0 2px 3px rgba(0, 0, 0, 0.35); }
+.piece.dragging { opacity: 0.3; }
+.piece.ghost { position: fixed; z-index: 1000; transform: translate(-50%, -55%) scale(1.1); pointer-events: none; }
+
+.promotion {
+  position: absolute; inset: 0; z-index: 5; display: grid; place-content: center; gap: 12px; text-align: center;
+  background: rgba(0, 0, 0, 0.55); color: #fff;
+}
+.promotion-title { font-weight: 700; }
+.promotion-choices { display: flex; gap: 8px; }
+.promotion-choice {
+  width: calc(var(--size) / 7); height: calc(var(--size) / 7);
+  font-size: calc(var(--size) / 10); background: var(--light-square); border: none; line-height: 1; padding: 0;
+}
+.promotion-choice.piece { pointer-events: auto; }
+.promotion .link { color: #fff; }
+

@@ -1,0 +1,49 @@
+/* Giao diện riêng của module Caro. */
+:root {
+  --caro-paper: #fbf7ec;
+  --caro-line: #d9cfb8;
+  --caro-x: #c0392b;
+  --caro-o: #1f5fa8;
+  --caro-last: rgba(240, 200, 60, 0.45);
+  --caro-win: rgba(46, 157, 91, 0.35);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --caro-paper: #2b2925; --caro-line: #4a4640; --caro-x: #ff7b6b; --caro-o: #7fb2ff; }
+}
+.caro-board {
+  --cell: calc(var(--stage-size, 600px) / var(--n));
+  width: var(--stage-size, 600px);
+  height: var(--stage-size, 600px);
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--n), minmax(0, 1fr));
+  background: var(--caro-paper);
+  border: 1px solid var(--caro-line);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+.caro-cell {
+  all: unset;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-right: 1px solid var(--caro-line);
+  border-bottom: 1px solid var(--caro-line);
+  font-size: calc(var(--cell) * 0.62);
+  line-height: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.caro-board.small .caro-cell { border-width: 3px; }
+.caro-board.clickable .caro-cell:not([data-stone='']) { cursor: default; }
+.caro-board.clickable .caro-cell[data-stone=''] { cursor: pointer; }
+.caro-board.clickable[data-preview='x'] .caro-cell[data-stone='']:hover::after { content: '✕'; color: var(--caro-x); opacity: 0.3; }
+.caro-board.clickable[data-preview='o'] .caro-cell[data-stone='']:hover::after { content: '◯'; color: var(--caro-o); opacity: 0.3; }
+.caro-cell:focus-visible { outline: 2px solid var(--caro-o); outline-offset: -2px; }
+.caro-cell.last { background: var(--caro-last); }
+.caro-cell.win { background: var(--caro-win); }
+.stone { font-weight: 700; }
+.stone.x { color: var(--caro-x); }
+.stone.o { color: var(--caro-o); }
