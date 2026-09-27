@@ -91,7 +91,7 @@ export class GameView {
     this.#renderStatus(game);
     this.#renderActions(game);
     this.#renderMoves(game);
-    this.#renderChat(game.id, state.chat[game.id] ?? []);
+    this.#renderChat(game, state.chat[game.id] ?? []);
   }
 
   #renderBar(bar, game, color) {
@@ -177,12 +177,18 @@ export class GameView {
     this.moves.scrollTop = this.moves.scrollHeight;
   }
 
-  #renderChat(gameId, messages) {
-    const key = `${gameId}:${messages.length}`;
+  #renderChat(game, messages) {
+    const key = `${game.id}:${messages.length}`;
     if (key === this.chatKey) return;
     this.chatKey = key;
     clear(this.chatLog);
-    for (const m of messages) this.chatLog.append(h('div', { class: 'chat-line' }, h('strong', {}, m.from.name + ': '), m.text));
+    const bots = new Set(Object.values(game.players).filter((p) => p?.isBot).map((p) => p.id));
+    for (const m of messages) {
+      const isBot = bots.has(m.from.id);
+      this.chatLog.append(
+        h('div', { class: `chat-line${isBot ? ' bot' : ''}` }, isBot ? '🤖 ' : null, h('strong', {}, m.from.name + ': '), m.text),
+      );
+    }
     if (!messages.length) this.chatLog.append(h('div', { class: 'meta' }, 'Chưa có tin nhắn.'));
     this.chatLog.scrollTop = this.chatLog.scrollHeight;
   }

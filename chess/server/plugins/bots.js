@@ -1,18 +1,22 @@
 import { botStrategies } from '../bots/strategies.js';
+import { botSkills } from '../bots/skills/index.js';
+import { systemScheduler } from '../app/ports.js';
 
 /**
  * Đối thủ máy — thêm hoàn toàn bằng composition (nguyên tắc 6):
  *  - register "opponent" vào registry để handler game.create dùng được,
  *  - nghe game.updated để biết tới lượt,
- *  - đi cờ qua ĐÚNG use case mà người thật dùng (services.games.move).
+ *  - đi cờ qua ĐÚNG use case mà người thật dùng (services.games.move),
+ *  - gắn thêm KỸ NĂNG khai báo trong cấu hình (bots/skills), ví dụ tán gẫu.
  *
- * options: { thinkMs: number, bots: [{ id, name, description, strategy }] }
+ * options: { thinkMs: number, bots: [{ id, name, description, strategy, skills?: [{ id, options }] }] }
  */
 export default {
   name: 'bots',
   setup({ bus, services, registries }, { thinkMs = 600, bots = [] }) {
     const players = new Map();
     const timers = new Set();
+    const skillTeardowns = [];
 
     for (const def of bots) {
       const strategy = botStrategies.get(def.strategy);
@@ -24,6 +28,10 @@ export default {
         description: def.description,
         join: (gameId) => services.games.join({ player, gameId }),
       });
+      for (const ref of def.skills ?? []) {
+        const teardown = botSkills.get(ref.id)({ bus, services, player, scheduler: systemScheduler, options: ref.options });
+        if (typeof teardown === 'function') skillTeardowns.push(teardown);
+      }
     }
 
     const thinking = new Set();
@@ -58,6 +66,7 @@ export default {
     return () => {
       off();
       timers.forEach(clearTimeout);
+      skillTeardowns.forEach((fn) => fn());
     };
   },
 };

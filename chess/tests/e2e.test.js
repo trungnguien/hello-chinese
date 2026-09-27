@@ -148,6 +148,16 @@ test('chơi với máy: bot tự trả lời nước đi', async () => {
   const reply = await alice.state(gameId, (s) => s.moves.length === 2);
   assert.equal(reply.players.b.isBot, true);
   assert.equal(reply.legalMoves.length > 0, true);
+
+  // Kỹ năng tán gẫu: bot chào khi vào ván và trả lời tin nhắn.
+  const greet = await alice.waitFor((m) => m.type === 'chat.message' && m.payload.from.id === 'bot:greedy', 3000);
+  assert.match(greet.payload.text, /Alice/);
+  await alice.request('chat.send', { gameId, text: 'bạn tên là gì?' });
+  const answer = await alice.waitFor(
+    (m) => m.type === 'chat.message' && m.payload.from.id === 'bot:greedy' && /vô địch/.test(m.payload.text),
+    3000,
+  );
+  assert.ok(answer);
   alice.ws.close();
 });
 

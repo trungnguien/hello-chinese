@@ -133,5 +133,34 @@ export default {
 };
 ```
 
+## Kỹ năng của bot: tán gẫu
+
+Mỗi bot khai báo **kỹ năng** trong cấu hình (dữ liệu), plugin `bots` lắp chúng vào lúc khởi động:
+
+```js
+{ id: 'greedy', strategy: 'greedy',
+  skills: [{ id: 'chat', options: { personality: 'proud', brain: 'rules', cooldownMs: 3000 } }] }
+```
+
+Kỹ năng `chat` (`server/bots/skills/chat.js`) chỉ **nghe sự kiện** và nói qua use case `games.chat`
+giống người thật:
+
+| Sự kiện | Bot làm gì |
+|---|---|
+| `game.started` | Chào đối thủ |
+| `game.moved` | Bình luận khi ăn quân, mất quân, chiếu, bị chiếu (theo xác suất) |
+| `game.ended` | Chúc mừng / tiếc nuối / nói về ván hoà |
+| `draw.offered` | Giải thích vì sao từ chối hoà |
+| `chat.posted` | Trả lời tin nhắn: chào, hỏi tên, "ai đang thắng", "gợi ý nước đi", khen, chê, tạm biệt… |
+
+- **Tính cách = dữ liệu** (`server/bots/chat/personalities.js`): `friendly` (Máy ngẫu nhiên) và
+  `proud` (Máy tham lam). Mẫu câu có `{opponent}`, `{piece}`, `{assessment}`, `{hint}`…; fact nào
+  không dùng được trong ngữ cảnh thì câu đó tự bị bỏ qua.
+- **Brain có thể thay** (`server/bots/chat/brains.js`): mặc định `rules` (so khớp mẫu, không dấu).
+  Muốn bot trò chuyện bằng mô hình ngôn ngữ chỉ cần `chatBrains.register('llm', { comment, reply })`
+  rồi đặt `brain: 'llm'` trong cấu hình — skill không đổi.
+- Chống spam: cooldown cho bình luận tự phát, tối đa N tin/ván, không trả lời chính mình hay bot khác.
+- Kỹ năng mới (ví dụ `taunt`, `coach`, `emote`) = `botSkills.register(id, factory)`.
+
 **Đổi kho lưu trữ** — `registries.repositories.register('redis', createRedisRepository)` rồi
 `storage: { kind: 'redis' }` trong cấu hình.

@@ -38,8 +38,20 @@ export default {
       options: {
         thinkMs: 600,
         bots: [
-          { id: 'random', name: 'Máy (ngẫu nhiên)', description: 'Đi ngẫu nhiên một nước hợp lệ', strategy: 'random' },
-          { id: 'greedy', name: 'Máy (tham lam)', description: 'Ăn quân khi có thể, tránh mất quân', strategy: 'greedy' },
+          {
+            id: 'random',
+            name: 'Máy (ngẫu nhiên)',
+            description: 'Đi ngẫu nhiên, thân thiện, hay tán gẫu',
+            strategy: 'random',
+            skills: [{ id: 'chat', options: { personality: 'friendly' } }],
+          },
+          {
+            id: 'greedy',
+            name: 'Máy (tham lam)',
+            description: 'Ăn quân khi có thể, tránh mất quân — và hơi kiêu',
+            strategy: 'greedy',
+            skills: [{ id: 'chat', options: { personality: 'proud', cooldownMs: 3000 } }],
+          },
         ],
       },
     },

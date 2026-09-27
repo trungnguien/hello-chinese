@@ -201,6 +201,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; }
 .moves .num { color: var(--muted); text-align: right; padding-right: 6px; }
 .san { padding: 1px 6px; border-radius: 4px; }
 .san.last { background: var(--last-move); }
+.chat-line.bot { background: var(--surface-2); border-radius: 6px; padding: 4px 8px; }
 .chat-log { height: 140px; overflow: auto; margin-bottom: 8px; display: grid; align-content: start; gap: 4px; font-size: 0.9rem; word-break: break-word; }
 
 .toasts { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); display: grid; gap: 8px; z-index: 2000; width: max-content; max-width: calc(100vw - 32px); }
