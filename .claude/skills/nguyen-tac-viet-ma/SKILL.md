@@ -1,9 +1,9 @@
 ---
-name: evolvable-design
-description: Bảy nguyên tắc viết mã giúp code dễ thay đổi và mở rộng (abstraction/capability, late binding, data-driven behavior, event, contract ổn định, composition, extension points). Dùng khi viết mới, sửa, refactor hoặc review code trong repo này, hoặc khi người dùng gọi /evolvable-design.
+name: nguyen-tac-viet-ma
+description: Bảy nguyên tắc viết mã giúp code dễ thay đổi và mở rộng (abstraction/capability, late binding, data-driven behavior, event, contract ổn định, composition, extension points). Dùng khi viết mới, sửa, refactor hoặc review code trong repo này, hoặc khi người dùng gọi /nguyen-tac-viet-ma.
 ---
 
-# Evolvable Design — 7 nguyên tắc viết mã
+# Nguyên tắc viết mã — 7 nguyên tắc
 
 Mục tiêu: code có thể thay đổi và mở rộng mà không phải sửa lan rộng phần đã có.
 Áp dụng ở mức vừa đủ — không tạo abstraction cho thứ chắc chắn không đổi.
