@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hanzi Blade</title>
+<style>
+  html,body{margin:0;height:100%;background:#111;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;font-family:Arial,sans-serif}
+  canvas{display:block;width:100vw;height:100vh}
+  #ui{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 1px 3px #000}
+  #hero{position:absolute;left:10px;top:10px;display:flex;gap:8px;align-items:center}
+  #avatar{width:54px;height:54px;border-radius:50%;background:#e8eaf6;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:26px;position:relative}
+  #lv{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);font-size:10px;background:#333;border-radius:8px;padding:1px 6px}
+  .bar{width:130px;height:10px;background:#0006;border-radius:5px;overflow:hidden;margin-top:3px;border:1px solid #fff6}
+  .bar i{display:block;height:100%}
+  #hp i{background:#7be04a}#xp i{background:#4ac7e0}
+  #power{font-size:14px;margin-top:3px}
+  #res{position:absolute;right:10px;top:14px;text-align:right;font-size:15px;font-weight:bold}
+  #res div{background:#0007;border-radius:12px;padding:3px 10px;margin-bottom:5px}
+  #words{position:absolute;left:10px;top:92px;font-size:14px;line-height:1.35;max-width:60vw}
+  #words b{font-size:18px}
+  #toast{position:absolute;top:30%;width:100%;text-align:center;font-size:26px;font-weight:bold;opacity:0;transition:opacity .4s}
+  #skill{position:absolute;right:24px;bottom:50px;width:84px;height:84px;border-radius:50%;background:radial-gradient(#ffe27a,#f5a623);border:4px solid #fff;pointer-events:auto;display:flex;align-items:center;justify-content:center;font-size:34px;color:#fff;overflow:hidden}
+  #skill i{position:absolute;left:0;bottom:0;width:100%;background:#000a;height:0}
+  #over{position:fixed;inset:0;background:#000c;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;pointer-events:auto;text-align:center}
+  #over button{font-size:20px;padding:12px 28px;border:0;border-radius:24px;background:#f5a623;color:#fff;margin-top:20px}
+  #help{position:absolute;bottom:8px;width:100%;text-align:center;font-size:11px;opacity:.7}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <div id="hero">
+    <div id="avatar">👧<span id="lv">Lv.1</span></div>
+    <div><b>Aurora</b>
+      <div class="bar" id="hp"><i></i></div><div class="bar" id="xp"><i></i></div>
+      <div id="power">⚔ 0</div></div>
+  </div>
+  <div id="res"><div>🪙 <span id="gold">0</span></div><div>💎 <span id="gems">0</span></div></div>
+  <div id="words"></div>
+  <div id="toast"></div>
+  <div id="skill">✨<i></i></div>
+  <div id="help">Kéo trái màn hình / WASD để di chuyển · tự động tấn công · ✨ hoặc Space = skill</div>
+</div>
+<div id="over"><h1>Bạn đã gục ngã</h1><div id="sum"></div><button onclick="start()">Chơi lại</button></div>
+
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H,DPR=Math.min(devicePixelRatio||1,2);
+function resize(){W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',resize);resize();
+
+const WORDS=[['火','huǒ','lửa'],['水','shuǐ','nước'],['木','mù','cây'],['山','shān','núi'],['日','rì','mặt trời'],['月','yuè','mặt trăng'],['人','rén','người'],['大','dà','to'],['小','xiǎo','nhỏ'],['你','nǐ','bạn'],['好','hǎo','tốt'],['爱','ài','yêu'],['心','xīn','tim'],['天','tiān','trời'],['花','huā','hoa'],['剑','jiàn','kiếm'],['龙','lóng','rồng'],['风','fēng','gió'],['雨','yǔ','mưa'],['星','xīng','sao']];
+const MAP=2400;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+// seeded scenery
+let seed=7;const sr=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const deco=[];for(let i=0;i<160;i++){const t=sr();deco.push({x:sr()*MAP,y:sr()*MAP,t:t<.5?'tree':t<.75?'rock':'flower',s:.8+sr()*.6})}
+const ponds=[{x:600,y:700,r:150},{x:1700,y:1500,r:200},{x:1200,y:300,r:110}];
+const inPond=(x,y,m=0)=>ponds.some(p=>Math.hypot(x-p.x,y-p.y)<p.r+m);
+for(let i=deco.length-1;i>=0;i--)if(inPond(deco[i].x,deco[i].y,30)||Math.hypot(deco[i].x-MAP/2,deco[i].y-MAP/2)<120)deco.splice(i,1);
+
+let P,enemies,fx,drops,learned,time,gold,gems,kills,over,joy={a:false,id:null,ox:0,oy:0,dx:0,dy:0},keys={};
+function start(){
+  P={x:MAP/2,y:MAP/2,hp:100,max:100,lv:1,xp:0,need:20,atk:12,spd:170,cd:0,scd:0,face:1,hit:0};
+  enemies=[];fx=[];drops=[];learned=new Map();time=0;gold=0;gems=0;kills=0;over=false;wave=0;spawnT=0;
+  document.getElementById('over').style.display='none';updWords();
+}
+let wave=0,spawnT=0;
+function spawn(boss){
+  const a=Math.random()*6.283,d=Math.max(W,H)*.65;
+  const w=WORDS[Math.floor(Math.random()*WORDS.length)];
+  let x=Math.min(MAP-20,Math.max(20,P.x+Math.cos(a)*d)),y=Math.min(MAP-20,Math.max(20,P.y+Math.sin(a)*d));
+  const m=1+wave*.25;
+  enemies.push(boss?{x,y,w,hp:300*m,max:300*m,spd:70,r:34,dmg:18,boss:1,hue:280,f:0}:
+    {x,y,w,hp:30*m,max:30*m,spd:rnd(55,85),r:16,dmg:6,hue:rnd(90,200),f:0});
+}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.opacity=0,1400)}
+function updWords(){document.getElementById('words').innerHTML='📖 Đã học: '+learned.size+'/'+WORDS.length+'<br>'+[...learned.values()].slice(-3).map(w=>`<b>${w[0]}</b> ${w[1]} – ${w[2]}`).join('<br>')}
+function dmgNum(x,y,t,c){fx.push({k:'num',x,y,t,c,l:.8})}
+function hurt(e,d){e.hp-=d;e.f=.1;dmgNum(e.x,e.y-e.r,Math.round(d),e.boss?'#ffd54f':'#fff');
+  if(e.hp<=0&&!e.dead){e.dead=1;kills++;
+    for(let i=0;i<(e.boss?8:2);i++)drops.push({x:e.x+rnd(-15,15),y:e.y+rnd(-15,15),g:Math.random()<(e.boss?.5:.12)?'gem':'gold'});
+    if(!learned.has(e.w[0])){learned.set(e.w[0],e.w);toast(`${e.w[0]}  ${e.w[1]} = ${e.w[2]}`);updWords()}
+    P.xp+=e.boss?15:4;
+    while(P.xp>=P.need){P.xp-=P.need;P.lv++;P.need=Math.floor(P.need*1.35);P.max+=15;P.hp=P.max;P.atk+=3;toast('LEVEL UP! Lv.'+P.lv);fx.push({k:'ring',x:P.x,y:P.y,r:10,m:200,l:.6,c:'#7be04a'})}
+  }}
+function skill(){
+  if(P.scd>0||over)return;P.scd=5;
+  fx.push({k:'ring',x:P.x,y:P.y,r:10,m:170,l:.6,c:'#ffc107',thick:1});
+  fx.push({k:'ring',x:P.x,y:P.y,r:5,m:120,l:.45,c:'#fff3a0'});
+  for(const e of enemies)if(Math.hypot(e.x-P.x,e.y-P.y)<170+e.r)hurt(e,P.atk*3.5);
+}
+document.getElementById('skill').addEventListener('pointerdown',e=>{e.stopPropagation();skill()});
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=1;if(e.key===' ')skill()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+cv.addEventListener('pointerdown',e=>{if(joy.a)return;joy={a:true,id:e.pointerId,ox:e.clientX,oy:e.clientY,dx:0,dy:0,cx:e.clientX,cy:e.clientY}});
+addEventListener('pointermove',e=>{if(joy.a&&e.pointerId===joy.id){joy.cx=e.clientX;joy.cy=e.clientY;let dx=e.clientX-joy.ox,dy=e.clientY-joy.oy,l=Math.hypot(dx,dy),m=50;if(l>m){dx=dx/l*m;dy=dy/l*m}joy.dx=dx/m;joy.dy=dy/m}});
+const rel=e=>{if(e.pointerId===joy.id)joy={a:false,dx:0,dy:0}};addEventListener('pointerup',rel);addEventListener('pointercancel',rel);
+
+function update(dt){
+  if(over)return;time+=dt;
+  let mx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),my=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
+  if(joy.a){mx=joy.dx;my=joy.dy}
+  const l=Math.hypot(mx,my);if(l>1){mx/=l;my/=l}
+  let nx=P.x+mx*P.spd*dt,ny=P.y+my*P.spd*dt;
+  if(!inPond(nx,ny,12)){P.x=Math.max(10,Math.min(MAP-10,nx));P.y=Math.max(10,Math.min(MAP-10,ny))}
+  if(mx)P.face=mx>0?1:-1;
+  P.cd-=dt;P.scd-=dt;P.hit-=dt;
+  // spawning
+  spawnT-=dt;wave=Math.floor(time/25);
+  if(spawnT<=0){spawnT=Math.max(.5,1.6-wave*.1);if(enemies.length<30)spawn(false)}
+  if(Math.floor(time)%25===24&&!update.b){update.b=1;spawn(true);toast('⚠ Boss xuất hiện!')}
+  if(Math.floor(time)%25!==24)update.b=0;
+  // auto attack
+  let tgt=null,bd=120;for(const e of enemies){const d=Math.hypot(e.x-P.x,e.y-P.y)-e.r;if(d<bd){bd=d;tgt=e}}
+  if(tgt&&P.cd<=0){P.cd=.45;const a=Math.atan2(tgt.y-P.y,tgt.x-P.x);fx.push({k:'slash',x:P.x,y:P.y,a,l:.2});hurt(tgt,P.atk*rnd(.9,1.2));if(tgt.x!==P.x)P.face=tgt.x>P.x?1:-1}
+  // enemies
+  for(const e of enemies){
+    const a=Math.atan2(P.y-e.y,P.x-e.x),d=Math.hypot(P.x-e.x,P.y-e.y);
+    if(d>e.r+12){e.x+=Math.cos(a)*e.spd*dt;e.y+=Math.sin(a)*e.spd*dt}
+    else if(P.hit<=0){P.hit=.6;P.hp-=e.dmg;dmgNum(P.x,P.y-30,e.dmg,'#ff5252')}
+    e.f-=dt;
+  }
+  enemies=enemies.filter(e=>!e.dead);
+  if(P.hp<=0){over=true;document.getElementById('sum').innerHTML=`Lv.${P.lv} · ${kills} quái · ${learned.size} từ đã học<br>🪙 ${gold} 💎 ${gems}`;document.getElementById('over').style.display='flex'}
+  for(const d of drops){const dd=Math.hypot(d.x-P.x,d.y-P.y);if(dd<90){d.x+=(P.x-d.x)*8*dt;d.y+=(P.y-d.y)*8*dt}if(dd<18){d.got=1;d.g==='gem'?gems++:gold+=10}}
+  drops=drops.filter(d=>!d.got);
+  for(const f of fx){f.l-=dt;if(f.k==='ring')f.r+=(f.m-f.r)*Math.min(1,dt*10);if(f.k==='num')f.y-=40*dt}
+  fx=fx.filter(f=>f.l>0);
+  P.hp=Math.min(P.max,P.hp+dt*1.5);
+}
+function hud(){
+  const $=id=>document.getElementById(id);
+  $('hp').firstChild.style.width=Math.max(0,P.hp/P.max*100)+'%';
+  $('xp').firstChild.style.width=P.xp/P.need*100+'%';
+  $('lv').textContent='Lv.'+P.lv;$('power').textContent='⚔ '+(P.atk*10+P.max*2).toLocaleString();
+  $('gold').textContent=gold.toLocaleString();$('gems').textContent=gems;
+  $('skill').lastChild.style.height=Math.max(0,P.scd/5*100)+'%';
+}
+function chibi(x,y,face,flash){
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='#0003';ctx.beginPath();ctx.ellipse(0,16,14,5,0,0,7);ctx.fill();
+  ctx.fillStyle=flash?'#fff':'#5c6bc0';ctx.fillRect(-8,2,16,14);           // outfit
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,-8,15,0,7);ctx.fill();    // white hair
+  ctx.fillStyle='#ffe0bd';ctx.beginPath();ctx.arc(0,-6,10,0,7);ctx.fill(); // face
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,-14,11,Math.PI,0);ctx.fill();
+  ctx.fillStyle='#3949ab';ctx.fillRect(-5+face*2,-8,3,4);ctx.fillRect(3+face*2,-8,3,4);
+  ctx.strokeStyle='#cfd8dc';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(face*12,6);ctx.lineTo(face*26,-8);ctx.stroke(); // sword
+  ctx.restore();
+}
+function draw(){
+  const cx=P.x-W/2,cy=P.y-H/2;
+  ctx.fillStyle='#6cae4f';ctx.fillRect(0,0,W,H);
+  ctx.save();ctx.translate(-cx,-cy);
+  // grass tiles
+  const T=80;ctx.fillStyle='#65a549';
+  for(let x=Math.floor(cx/T)*T;x<cx+W+T;x+=T)for(let y=Math.floor(cy/T)*T;y<cy+H+T;y+=T)if(((x/T)+(y/T))&1)ctx.fillRect(x,y,T,T);
+  for(const p of ponds){ctx.fillStyle='#4fc3f7';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();ctx.strokeStyle='#e1f5fe';ctx.lineWidth=4;ctx.stroke()}
+  ctx.strokeStyle='#33691e';ctx.lineWidth=8;ctx.strokeRect(0,0,MAP,MAP);
+  const items=[];
+  for(const d of deco)if(d.x>cx-60&&d.x<cx+W+60&&d.y>cy-80&&d.y<cy+H+60)items.push({y:d.y,f:()=>drawDeco(d)});
+  for(const e of enemies)items.push({y:e.y,f:()=>drawEnemy(e)});
+  items.push({y:P.y,f:()=>chibi(P.x,P.y,P.face,P.hit>.45)});
+  items.sort((a,b)=>a.y-b.y).forEach(i=>i.f());
+  for(const d of drops){ctx.fillStyle=d.g==='gem'?'#4dd0e1':'#ffca28';ctx.beginPath();d.g==='gem'?(ctx.moveTo(d.x,d.y-7),ctx.lineTo(d.x+6,d.y),ctx.lineTo(d.x,d.y+7),ctx.lineTo(d.x-6,d.y)):ctx.arc(d.x,d.y,6,0,7);ctx.fill()}
+  for(const f of fx){
+    if(f.k==='ring'){ctx.strokeStyle=f.c;ctx.globalAlpha=Math.min(1,f.l*2.5);ctx.lineWidth=f.thick?10:4;ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,7);ctx.stroke();if(f.thick){ctx.fillStyle='#ffc10733';ctx.fill()}ctx.globalAlpha=1}
+    if(f.k==='slash'){ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.globalAlpha=f.l*5;ctx.beginPath();ctx.arc(f.x,f.y,44,f.a-.8,f.a+.8);ctx.stroke();ctx.globalAlpha=1}
+    if(f.k==='num'){ctx.fillStyle=f.c;ctx.font='bold 16px Arial';ctx.textAlign='center';ctx.strokeStyle='#000';ctx.lineWidth=3;ctx.strokeText(f.t,f.x,f.y);ctx.fillText(f.t,f.x,f.y)}
+  }
+  ctx.restore();
+  if(joy.a){ctx.strokeStyle='#fff8';ctx.lineWidth=3;ctx.beginPath();ctx.arc(joy.ox,joy.oy,50,0,7);ctx.stroke();ctx.fillStyle='#fff6';ctx.beginPath();ctx.arc(joy.ox+joy.dx*50,joy.oy+joy.dy*50,22,0,7);ctx.fill()}
+}
+function drawDeco(d){
+  if(d.t==='tree'){ctx.fillStyle='#0002';ctx.beginPath();ctx.ellipse(d.x,d.y+4,26*d.s,9,0,0,7);ctx.fill();ctx.fillStyle='#6d4c41';ctx.fillRect(d.x-5,d.y-20*d.s,10,24*d.s);ctx.fillStyle='#2e7d32';ctx.beginPath();ctx.arc(d.x,d.y-36*d.s,28*d.s,0,7);ctx.fill();ctx.fillStyle='#43a047';ctx.beginPath();ctx.arc(d.x-6,d.y-42*d.s,16*d.s,0,7);ctx.fill()}
+  else if(d.t==='rock'){ctx.fillStyle='#90a4ae';ctx.beginPath();ctx.ellipse(d.x,d.y,20*d.s,13*d.s,0,0,7);ctx.fill();ctx.fillStyle='#b0bec5';ctx.beginPath();ctx.ellipse(d.x-4,d.y-4,10*d.s,6*d.s,0,0,7);ctx.fill()}
+  else{ctx.fillStyle='#f48fb1';for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(d.x+Math.cos(i*1.256)*5,d.y+Math.sin(i*1.256)*5,3.5,0,7);ctx.fill()}ctx.fillStyle='#ffeb3b';ctx.beginPath();ctx.arc(d.x,d.y,3,0,7);ctx.fill()}
+}
+function drawEnemy(e){
+  ctx.fillStyle='#0003';ctx.beginPath();ctx.ellipse(e.x,e.y+e.r*.8,e.r,e.r*.35,0,0,7);ctx.fill();
+  ctx.fillStyle=e.f>0?'#fff':`hsl(${e.hue},60%,${e.boss?40:60}%)`;
+  ctx.beginPath();ctx.arc(e.x,e.y,e.r,Math.PI,0);ctx.lineTo(e.x+e.r,e.y+e.r*.7);ctx.lineTo(e.x-e.r,e.y+e.r*.7);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font=`bold ${e.r*1.1}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e.w[0],e.x,e.y+e.r*.1);
+  ctx.fillStyle='#0008';ctx.fillRect(e.x-e.r,e.y-e.r-10,e.r*2,5);ctx.fillStyle=e.boss?'#ffb300':'#e53935';ctx.fillRect(e.x-e.r,e.y-e.r-10,e.r*2*Math.max(0,e.hp/e.max),5);
+}
+let last=performance.now();
+function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;update(dt);draw();hud();requestAnimationFrame(loop)}
+start();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
